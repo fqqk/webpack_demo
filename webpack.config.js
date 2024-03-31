@@ -31,18 +31,28 @@ module.exports = {
     rules: [
       // 各ローダーを設定するプロパティです。配列となっており、その各要素に各ローダーのルールを設定して行きます。
       {
-        test: /\.css$/, // 正規表現などで該当するファイルを指定
-        use: [
+        test: /\.(sass|scss|css)$/,  // 正規表現などで該当するファイルを指定
+        use: [  // 使用するローダーを指定するプロパティ
           "style-loader",
           {
             loader: "css-loader",
             options: {
-              url: false,  // CSS内のurl()の有効無効を設定
-              sourceMap: sourceMapStatus,
-            },
+              url: true,  // CSS内のurl()の有効無効を設定. trueにすると画像もビルドされ、それが読み込まれる
+              sourceMap: true,
+            }
           },
-        ], // 使用するローダーを指定するプロパティ
+          {
+            loader: "sass-loader",
+            options: {
+              sourceMap: true,
+            }
+          }
+        ]
       },
+      {
+        test: /\.(gif|png|jpg|svg)$/,
+        type: "asset/inline",
+      }
     ],
   },
 };
