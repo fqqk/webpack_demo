@@ -1,5 +1,10 @@
 // node.js の標準モジュール path を読み込む
 const path = require("path");
+// プラグインの読み込み
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const HtmlWebpackPlugin = require("html-webpack-plugin");
+const CopyWebpackPlugin   = require('copy-webpack-plugin');
+// const ImageminMozjpeg = require('imagemin-mozjpeg');
 
 const MODE = "development";
 
@@ -31,28 +36,85 @@ module.exports = {
     rules: [
       // 各ローダーを設定するプロパティです。配列となっており、その各要素に各ローダーのルールを設定して行きます。
       {
-        test: /\.(sass|scss|css)$/,  // 正規表現などで該当するファイルを指定
-        use: [  // 使用するローダーを指定するプロパティ
-          "style-loader",
+        test: /\.(sass|scss|css)$/, // 正規表現などで該当するファイルを指定
+        use: [
+          // CSSファイルを書き出すオプションを有効にする
+          {
+            loader: MiniCssExtractPlugin.loader,
+          },
           {
             loader: "css-loader",
             options: {
-              url: true,  // CSS内のurl()の有効無効を設定. trueにすると画像もビルドされ、それが読み込まれる
-              sourceMap: true,
-            }
+              url: true, // CSS内のurl()の有効無効を設定. trueにすると画像もビルドされ、それが読み込まれる
+              sourceMap: sourceMapStatus,
+            },
           },
           {
             loader: "sass-loader",
             options: {
-              sourceMap: true,
-            }
-          }
-        ]
+              sourceMap: sourceMapStatus,
+            },
+          },
+          // 使用するローダーを指定するプロパティ
+          // "style-loader",
+        ],
+      },
+      {
+        test: /\.html$/,
+        use: ['html-loader']
       },
       {
         test: /\.(gif|png|jpg|svg)$/,
-        type: "asset/inline",
-      }
+        type: "asset",
+        parser: {
+          dataUrlCondition: {
+            // これで100KB以上という設定になる。
+            maxSize: 100 * 1024,
+          },
+        },
+      },
     ],
   },
+  // プラグインの設定
+  plugins: [
+    new MiniCssExtractPlugin({
+      // 出力先の設定
+      filename: "./css/[name].css",
+    }),
+    // html-webpack-pluginの設定
+    new HtmlWebpackPlugin({
+      // 対象のテンプレートを設定
+      template: `${__dirname}/src/index.html`,
+      // 書き出し先
+      filename: `${__dirname}/dist/index.html`,
+      // ビルドしたjsファイルを読み込む場所。デフォルトはhead
+      inject: 'body'
+    }),
+    new CopyWebpackPlugin({
+      patterns: [
+        {
+          from: `${__dirname}/src/img/`,
+          to: `${__dirname}/dist/img/`,
+        }
+      ]
+    })
+    // new ImageminPlugin({
+    //   test: /\.(jpe?g|png|gif|svg)$/i,
+    //   pngquant: {
+    //     quality: '70-85'
+    //   },
+    //   gifsicle: {
+    //     interlaced: false,
+    //     optimizationLevel: 9,
+    //     colors: 256
+    //   },
+    //   plugins: [
+    //     ImageminMozjpeg({
+    //       quality: 85,
+    //       progressive: true
+    //     })
+    //   ],
+    //   svgo: {},
+    // })
+  ],
 };
